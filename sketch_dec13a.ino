@@ -8,14 +8,16 @@
 #define BUTTON_RED 9
 #define BUTTON_BLUE 10
 
-#define SEQUENCE_SIZE 4
-#define INTERVAL 1000
-
-int light_sequence[SEQUENCE_SIZE];
+#define NUMBER_OF_COLORS 3
 
 void setup(){
     Serial.begin(9600);
     declarePorts();
+    int *colors = color_sorter();
+    
+    for(int a = 0 ; a < NUMBER_OF_COLORS ; a++){
+      flashes_led(colors[a]);
+    }
 }
 
 void declarePorts()
@@ -36,32 +38,66 @@ void declarePorts()
 void loop(){
     Serial.begin(9600);
 
-    /* BOTAO VERDE */
-    if(digitalRead(BUTTON_GREEN) == 0){
+    lights_up_from_the_push_button();
+
+}
+
+int *color_sorter(){
+  /* lê a porta analogica 0 vazia*/ 
+  /* para alimentar a funcao geradora de numeros aleatorios com um valor flutuante */
+  randomSeed(analogRead(0));
+  
+  /* aloca 10 posicoes de memoria */
+  int *colors = malloc(NUMBER_OF_COLORS);
+  
+  if(!colors){
+    return NULL;
+  }else{
+    /* alocacao efetuada com sucesso */
+    for(int a = 0; a < NUMBER_OF_COLORS ; a++){
+      /* popula as posicoes com cores aleatorias */
+      colors[a] = random(LED_GREEN,LED_BLUE + 1);
+    }
+  }
+
+  return colors;
+}
+
+void flashes_led(int led){
+  /* mantem led acesso por 1 segundo */
+  digitalWrite(led , LOW);
+  delay(1000);
+  digitalWrite(led , HIGH);
+  delay(1000);
+  digitalWrite(led , LOW);
+}
+
+void lights_up_from_the_push_button(){
+  /* BOTAO VERDE */
+    if(!digitalRead(BUTTON_GREEN)){
       digitalWrite(LED_GREEN , HIGH);
     }else{
       digitalWrite(LED_GREEN , LOW);
     }
 
     /* BOTAO AMARELO */
-    if(digitalRead(BUTTON_YELLOW) == 0){
+    if(!digitalRead(BUTTON_YELLOW)){
       digitalWrite(LED_YELLOW , HIGH);
     }else{
       digitalWrite(LED_YELLOW , LOW);
     }
 
     /* BOTAO VERMELHO */
-    if(digitalRead(BUTTON_RED) == 0){
+    if(!digitalRead(BUTTON_RED)){
       digitalWrite(LED_RED , HIGH);
     }else{
       digitalWrite(LED_RED , LOW);
     }
     
     /* BOTAO AZUL*/
-    if(digitalRead(BUTTON_BLUE) == 0){
+    if(!digitalRead(BUTTON_BLUE)){
       digitalWrite(LED_BLUE , HIGH);
     }else{
       digitalWrite(LED_BLUE , LOW);
     }
-   
 }
