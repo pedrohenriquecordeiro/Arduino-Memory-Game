@@ -15,9 +15,18 @@ int number_of_colors = 1;
 void setup(){
     Serial.begin(9600);
     declarePorts();
-    /* sinaliza o inicio do jogo */
+    /* signals start of play */
     begin_game();
 }
+
+
+void loop(){
+    Serial.begin(9600);
+    
+    end_game();
+
+}
+
 
 void declarePorts()
 {
@@ -33,16 +42,8 @@ void declarePorts()
 }
 
 
-
-void loop(){
-    Serial.begin(9600);
-
-    
-
-}
-
 void begin_game(){
-  /* sinaliza inicio de jogo */
+  /* signals start of play */
   delay(2000);
   float interval = 100;
   while(interval >= 0 ){
@@ -56,29 +57,65 @@ void begin_game(){
     digitalWrite(LED_RED , LOW);
     digitalWrite(LED_BLUE , LOW);
     delay(interval);
-    interval = interval - 2 ;
+    interval = interval - 2.5 ;
   }
   digitalWrite(LED_GREEN , HIGH);
   digitalWrite(LED_YELLOW , HIGH);
   digitalWrite(LED_RED , HIGH);
   digitalWrite(LED_BLUE , HIGH);
   
+} 
+
+void end_game(){
+  int interval = 300;
+  while(1){
+    digitalWrite(LED_GREEN , HIGH);
+    digitalWrite(LED_YELLOW , LOW);
+    digitalWrite(LED_RED , LOW);
+    digitalWrite(LED_BLUE , LOW);
+    delay(interval);
+    digitalWrite(LED_GREEN , LOW);
+    digitalWrite(LED_YELLOW , HIGH);
+    digitalWrite(LED_RED , LOW);
+    digitalWrite(LED_BLUE , LOW);
+    delay(interval);
+    digitalWrite(LED_GREEN , LOW);
+    digitalWrite(LED_YELLOW , LOW);
+    digitalWrite(LED_RED , HIGH);
+    digitalWrite(LED_BLUE , LOW);
+    delay(interval);
+    digitalWrite(LED_GREEN , LOW);
+    digitalWrite(LED_YELLOW , LOW);
+    digitalWrite(LED_RED , LOW);
+    digitalWrite(LED_BLUE , HIGH);
+    delay(interval);
+    digitalWrite(LED_GREEN , LOW);
+    digitalWrite(LED_YELLOW , LOW);
+    digitalWrite(LED_RED , HIGH);
+    digitalWrite(LED_BLUE , LOW);
+    delay(interval);
+    digitalWrite(LED_GREEN , LOW);
+    digitalWrite(LED_YELLOW , HIGH);
+    digitalWrite(LED_RED , LOW);
+    digitalWrite(LED_BLUE , LOW);
+    delay(interval);
+  }
 }
 
 int *color_sorter(int number_of_colors){
-  /* lê a porta analogica 0 vazia*/ 
-  /* para alimentar a funcao geradora de numeros aleatorios com um valor flutuante */
+  /* reads analogue port 0 empty*/ 
+  /* to feed the random number generator function with a floating value*/
   randomSeed(analogRead(0));
   
-  /* aloca 10 posicoes de memoria */
+  /* allocates 10 memory locations*/
   int *colors = malloc(number_of_colors);
   
   if(!colors){
     return NULL;
   }else{
-    /* alocacao efetuada com sucesso */
+    /* allocation made successfully */
     for(int a = 0; a < number_of_colors ; a++){
-      /* popula as posicoes com cores aleatorias */
+      /* populate the positions with random colors */
       colors[a] = random(LED_GREEN,LED_BLUE + 1);
     }
   }
@@ -87,7 +124,7 @@ int *color_sorter(int number_of_colors){
 }
 
 void flashes_led(int led){
-  /* mantem led acesso por 1 segundo */
+  /* keep led access for 1 second*/
   digitalWrite(led , LOW);
   delay(1000);
   digitalWrite(led , HIGH);
@@ -96,28 +133,28 @@ void flashes_led(int led){
 }
 
 void lights_up_from_the_push_button(){
-  /* BOTAO VERDE */
+  /* GREEN BUTTON */
     if(!digitalRead(BUTTON_GREEN)){
       digitalWrite(LED_GREEN , HIGH);
     }else{
       digitalWrite(LED_GREEN , LOW);
     }
 
-    /* BOTAO AMARELO */
+    /* YELLOW BUTTON */
     if(!digitalRead(BUTTON_YELLOW)){
       digitalWrite(LED_YELLOW , HIGH);
     }else{
       digitalWrite(LED_YELLOW , LOW);
     }
 
-    /* BOTAO VERMELHO */
+    /* RED BUTTON */
     if(!digitalRead(BUTTON_RED)){
       digitalWrite(LED_RED , HIGH);
     }else{
       digitalWrite(LED_RED , LOW);
     }
     
-    /* BOTAO AZUL*/
+    /* BLUE BUTTON */
     if(!digitalRead(BUTTON_BLUE)){
       digitalWrite(LED_BLUE , HIGH);
     }else{
