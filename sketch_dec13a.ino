@@ -8,22 +8,122 @@
 #define BUTTON_RED 9
 #define BUTTON_BLUE 10
 
-#define NUMBER_OF_COLORS 3
+#define BEGIN 0
+#define IN_GAME_SHOW_SEQUENCE 1
+#define IN_GAME_PLAYER_TIME 2
+#define END_WIN 3
+#define END_FAIL 4
 
-int number_of_colors = 1;
+#define NUMBER_OF_GAMES 3
+
+int current_state = 0;
+
+int number_of_colors = 0;
+int *sequence_of_colors;
+
+int hit_or_miss = 0;
 
 void setup(){
     Serial.begin(9600);
     declarePorts();
-    /* signals start of play */
-    begin_game();
+    
 }
 
 
 void loop(){
     Serial.begin(9600);
+
+    for(int b = 0 ; b <= NUMBER_OF_GAMES ; b++){
+
+      switch(current_state){
+        case BEGIN:
+          /* signals start of play */
+          begin_game();
+          for(;;){
+            if(!digitalRead(BUTTON_GREEN) || !digitalRead(BUTTON_RED) || !digitalRead(BUTTON_BLUE) || !digitalRead(BUTTON_YELLOW)){
+               current_state = IN_GAME_SHOW_SEQUENCE;
+              break;
+            }
+          }
+          break;
+          
+        case IN_GAME_SHOW_SEQUENCE:
+          blackout();
+          number_of_colors += 1;
+          int *sequence_of_colors = color_sorter(number_of_colors);
+          for(int a = 0 ; a < number_of_colors ; a++){
+            flashes_led(sequence_of_colors[a]);
+          }
+          current_state = IN_GAME_PLAYER_TIME;
+          break;
+
+        case IN_GAME_PLAYER_TIME:
+          hit_or_miss = 0;
+          for(int a = 0 ; a < number_of_colors ; a++){
+            for(;;){
+              if(!digitalRead(BUTTON_GREEN)){
+                flashes_led_fast(LED_GREEN);
+                if(sequence_of_colors[a] == 2){
+                  hit_or_miss = 1;
+                  break;
+                }else{
+                  hit_or_miss = -1;
+                  current_state = END_FAIL;
+                  break;
+                }
+              }else if(!digitalRead(BUTTON_YELLOW)){
+                flashes_led_fast(LED_YELLOW);
+                if(sequence_of_colors[a] == 3){
+                  hit_or_miss = 1;
+                  break;
+                }else{
+                  hit_or_miss = -1;
+                  current_state = END_FAIL;
+                  break;
+                }
+              }else if(!digitalRead(BUTTON_RED)){
+                flashes_led_fast(LED_RED);
+                if(sequence_of_colors[a] == 4){
+                  hit_or_miss = 1;
+                  break;
+                }else{
+                  hit_or_miss = -1;
+                  current_state = END_FAIL;
+                  break;
+                }
+              }else if(!digitalRead(BUTTON_BLUE)){
+                flashes_led_fast(LED_BLUE);
+                if(sequence_of_colors[a] == 5){
+                  hit_or_miss = 1;
+                  break;
+                }else{
+                  hit_or_miss = -1;
+                  current_state = END_FAIL;
+                  break;
+                }
+              } 
+            }
+          }
+          current_state = IN_GAME_SHOW_SEQUENCE;
+          break;
+          
+        case END_FAIL:
+          end_game_fail();
+          break;
+
+      }
+    }
+
+    for(;;){
+      if(hit_or_miss == 0){
+        end_game_fail();
+      }else{
+        end_game_win();
+      }
+    }
     
-    end_game();
+    
+    
 
 }
 
@@ -66,7 +166,31 @@ void begin_game(){
   
 } 
 
-void end_game(){
+void end_game_fail(){
+  digitalWrite(LED_GREEN , LOW);
+  digitalWrite(LED_YELLOW, LOW);
+  digitalWrite(LED_RED , LOW);
+  digitalWrite(LED_BLUE , LOW);
+}
+
+void blackout(){
+  digitalWrite(LED_GREEN , LOW);
+  digitalWrite(LED_YELLOW, LOW);
+  digitalWrite(LED_RED , LOW);
+  digitalWrite(LED_BLUE , LOW);
+  delay(3000);
+}
+
+void hit(){
+  digitalWrite(LED_GREEN , HIGH);
+  digitalWrite(LED_YELLOW, HIGH);
+  digitalWrite(LED_RED , HIGH);
+  digitalWrite(LED_BLUE , HIGH);
+  delay(3000);
+}
+
+void end_game_win(){
+  /* signals send of play */
   int interval = 300;
   while(1){
     digitalWrite(LED_GREEN , HIGH);
@@ -129,6 +253,15 @@ void flashes_led(int led){
   delay(1000);
   digitalWrite(led , HIGH);
   delay(1000);
+  digitalWrite(led , LOW);
+}
+
+void flashes_led_fast(int led){
+  /* keep led access for 1 second*/
+  digitalWrite(led , LOW);
+  delay(50);
+  digitalWrite(led , HIGH);
+  delay(50);
   digitalWrite(led , LOW);
 }
 
