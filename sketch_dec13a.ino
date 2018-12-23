@@ -19,113 +19,125 @@
 int current_state = 0;
 
 int number_of_colors = 0;
-int *sequence_of_colors;
 
 int hit_or_miss = 0;
+int *sequence_of_colors;
 
 void setup(){
-    Serial.begin(9600);
-    declarePorts();
-    
+  Serial.begin(9600);
+  declarePorts();
+  /* sorteia as cores apenas uma vez */
+  sequence_of_colors = color_sorter(NUMBER_OF_GAMES);
+  
 }
 
 
 void loop(){
-    Serial.begin(9600);
 
-    for(int b = 0 ; b <= NUMBER_OF_GAMES ; b++){
+  Serial.begin(9600);
 
-      switch(current_state){
-        case BEGIN:
-          /* signals start of play */
-          begin_game();
-          for(;;){
-            if(!digitalRead(BUTTON_GREEN) || !digitalRead(BUTTON_RED) || !digitalRead(BUTTON_BLUE) || !digitalRead(BUTTON_YELLOW)){
-               current_state = IN_GAME_SHOW_SEQUENCE;
+  switch(current_state){
+    case BEGIN:
+      Serial.println("IN BEGIN");
+      /* signals start of play */
+      begin_game();
+      for(;;){
+        if(!digitalRead(BUTTON_GREEN) || !digitalRead(BUTTON_RED) || !digitalRead(BUTTON_BLUE) || !digitalRead(BUTTON_YELLOW)){
+            Serial.println("GOING TO IN_GAME_SHOW_SEQUENCE ");
+            current_state = IN_GAME_SHOW_SEQUENCE;
+          break;
+        }
+      }
+      break;
+      
+    case IN_GAME_SHOW_SEQUENCE:
+      Serial.println("IN IN_GAME_SHOW_SEQUENCE ");
+      blackout();
+      for(int a = 0 ; a < NUMBER_OF_GAMES ; a++){
+        flashes_led(sequence_of_colors[a]);
+      }
+      current_state = IN_GAME_PLAYER_TIME;
+      Serial.println("GOING TO IN_GAME_PLAYER_TIME");
+      break;
+
+    case IN_GAME_PLAYER_TIME:
+      Serial.println("IN IN_GAME_PLAYER_TIME ");
+      hit_or_miss = 0;
+      for(int a = 0 ; a < NUMBER_OF_GAMES ; a++){
+        for(;;){
+          if(!digitalRead(BUTTON_GREEN)){
+            flashes_led_fast(LED_GREEN);
+            delay(500);
+            if(sequence_of_colors[a] == 2){
+              hit_or_miss = 1;
+              break;
+            }else{
+              hit_or_miss = -1;
+              current_state = END_FAIL;
+              Serial.println("GOING TO END_FAIL");
               break;
             }
-          }
-          break;
-          
-        case IN_GAME_SHOW_SEQUENCE:
-          blackout();
-          number_of_colors += 1;
-          int *sequence_of_colors = color_sorter(number_of_colors);
-          for(int a = 0 ; a < number_of_colors ; a++){
-            flashes_led(sequence_of_colors[a]);
-          }
-          current_state = IN_GAME_PLAYER_TIME;
-          break;
-
-        case IN_GAME_PLAYER_TIME:
-          hit_or_miss = 0;
-          for(int a = 0 ; a < number_of_colors ; a++){
-            for(;;){
-              if(!digitalRead(BUTTON_GREEN)){
-                flashes_led_fast(LED_GREEN);
-                if(sequence_of_colors[a] == 2){
-                  hit_or_miss = 1;
-                  break;
-                }else{
-                  hit_or_miss = -1;
-                  current_state = END_FAIL;
-                  break;
-                }
-              }else if(!digitalRead(BUTTON_YELLOW)){
-                flashes_led_fast(LED_YELLOW);
-                if(sequence_of_colors[a] == 3){
-                  hit_or_miss = 1;
-                  break;
-                }else{
-                  hit_or_miss = -1;
-                  current_state = END_FAIL;
-                  break;
-                }
-              }else if(!digitalRead(BUTTON_RED)){
-                flashes_led_fast(LED_RED);
-                if(sequence_of_colors[a] == 4){
-                  hit_or_miss = 1;
-                  break;
-                }else{
-                  hit_or_miss = -1;
-                  current_state = END_FAIL;
-                  break;
-                }
-              }else if(!digitalRead(BUTTON_BLUE)){
-                flashes_led_fast(LED_BLUE);
-                if(sequence_of_colors[a] == 5){
-                  hit_or_miss = 1;
-                  break;
-                }else{
-                  hit_or_miss = -1;
-                  current_state = END_FAIL;
-                  break;
-                }
-              } 
+          }else if(!digitalRead(BUTTON_YELLOW)){
+            flashes_led_fast(LED_YELLOW);
+            delay(500);
+            if(sequence_of_colors[a] == 3){
+              hit_or_miss = 1;
+              break;
+            }else{
+              hit_or_miss = -1;
+              current_state = END_FAIL;
+              Serial.println("GOING TO END_FAIL");
+              break;
             }
-          }
-          current_state = IN_GAME_SHOW_SEQUENCE;
+          }else if(!digitalRead(BUTTON_RED)){
+            flashes_led_fast(LED_RED);
+            delay(500);
+            if(sequence_of_colors[a] == 4){
+              hit_or_miss = 1;
+              break;
+            }else{
+              hit_or_miss = -1;
+              current_state = END_FAIL;
+              Serial.println("GOING TO END_FAIL");
+              break;
+            }
+          }else if(!digitalRead(BUTTON_BLUE)){
+            flashes_led_fast(LED_BLUE);
+            delay(500);
+            if(sequence_of_colors[a] == 5){
+              hit_or_miss = 1;
+              break;
+            }else{
+              hit_or_miss = -1;
+              current_state = END_FAIL;
+              Serial.println("GOING TO  END_FAIL");
+              break;
+            }
+          } 
+        }
+        if( hit_or_miss == -1){
           break;
-          
-        case END_FAIL:
-          end_game_fail();
-          break;
-
+        }
       }
-    }
-
-    for(;;){
-      if(hit_or_miss == 0){
-        end_game_fail();
+      if(hit_or_miss != -1 ){
+        current_state = END_WIN;
       }else{
-        end_game_win();
+        current_state = END_FAIL;
       }
-    }
-    
-    
-    
+      break;
+      
+    case END_FAIL:
+      Serial.println("IN END_FAIL");
+      end_game_fail();
+      break;
 
+    case END_WIN:
+      Serial.println("IN END_WIN");
+      end_game_win();
+      break;
+  }
 }
+
 
 
 void declarePorts()
@@ -144,32 +156,16 @@ void declarePorts()
 
 void begin_game(){
   /* signals start of play */
-  delay(2000);
-  float interval = 100;
-  while(interval >= 0 ){
-    digitalWrite(LED_GREEN , HIGH);
-    digitalWrite(LED_YELLOW , HIGH);
-    digitalWrite(LED_RED , HIGH);
-    digitalWrite(LED_BLUE , HIGH);
-    delay(interval);
-    digitalWrite(LED_GREEN , LOW);
-    digitalWrite(LED_YELLOW , LOW);
-    digitalWrite(LED_RED , LOW);
-    digitalWrite(LED_BLUE , LOW);
-    delay(interval);
-    interval = interval - 2.5 ;
-  }
   digitalWrite(LED_GREEN , HIGH);
   digitalWrite(LED_YELLOW , HIGH);
   digitalWrite(LED_RED , HIGH);
   digitalWrite(LED_BLUE , HIGH);
-  
 } 
 
 void end_game_fail(){
   digitalWrite(LED_GREEN , LOW);
   digitalWrite(LED_YELLOW, LOW);
-  digitalWrite(LED_RED , LOW);
+  digitalWrite(LED_RED , HIGH);
   digitalWrite(LED_BLUE , LOW);
 }
 
@@ -191,54 +187,25 @@ void hit(){
 
 void end_game_win(){
   /* signals send of play */
-  int interval = 300;
-  while(1){
-    digitalWrite(LED_GREEN , HIGH);
-    digitalWrite(LED_YELLOW , LOW);
-    digitalWrite(LED_RED , LOW);
-    digitalWrite(LED_BLUE , LOW);
-    delay(interval);
-    digitalWrite(LED_GREEN , LOW);
-    digitalWrite(LED_YELLOW , HIGH);
-    digitalWrite(LED_RED , LOW);
-    digitalWrite(LED_BLUE , LOW);
-    delay(interval);
-    digitalWrite(LED_GREEN , LOW);
-    digitalWrite(LED_YELLOW , LOW);
-    digitalWrite(LED_RED , HIGH);
-    digitalWrite(LED_BLUE , LOW);
-    delay(interval);
-    digitalWrite(LED_GREEN , LOW);
-    digitalWrite(LED_YELLOW , LOW);
-    digitalWrite(LED_RED , LOW);
-    digitalWrite(LED_BLUE , HIGH);
-    delay(interval);
-    digitalWrite(LED_GREEN , LOW);
-    digitalWrite(LED_YELLOW , LOW);
-    digitalWrite(LED_RED , HIGH);
-    digitalWrite(LED_BLUE , LOW);
-    delay(interval);
-    digitalWrite(LED_GREEN , LOW);
-    digitalWrite(LED_YELLOW , HIGH);
-    digitalWrite(LED_RED , LOW);
-    digitalWrite(LED_BLUE , LOW);
-    delay(interval);
-  }
+  digitalWrite(LED_GREEN , HIGH);
+  digitalWrite(LED_YELLOW , LOW);
+  digitalWrite(LED_RED , LOW);
+  digitalWrite(LED_BLUE , LOW);
 }
 
-int *color_sorter(int number_of_colors){
+int *color_sorter(int number){
   /* reads analogue port 0 empty*/ 
   /* to feed the random number generator function with a floating value*/
   randomSeed(analogRead(0));
   
-  /* allocates 10 memory locations*/
-  int *colors = malloc(number_of_colors);
+  /* allocates number memory locations*/
+  int *colors = (int *) malloc(number);
   
   if(!colors){
     return NULL;
   }else{
     /* allocation made successfully */
-    for(int a = 0; a < number_of_colors ; a++){
+    for(int a = 0; a < number ; a++){
       /* populate the positions with random colors */
       colors[a] = random(LED_GREEN,LED_BLUE + 1);
     }
